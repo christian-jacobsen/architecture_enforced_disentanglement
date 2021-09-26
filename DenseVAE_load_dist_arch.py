@@ -5,10 +5,9 @@ Created on Wed Apr  7 11:27:37 2021
 @author: chris
 """
 
-from DenseVAE_latent_rot import *
 from DenseVAE_distributed_arch import *
-from load_data import load_data
 from load_data_new import load_data_new
+import os
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -37,24 +36,19 @@ kle = 2
 ntrain = 512
 ntest = 512
 
-trial = 27
+trial = 0
+load_path = './DarcyFlow/p2/multimodal/arch1/n2/VAE_{}'.format(trial)
+model_name = 'VAE_{}.pth'.format(trial)
 
-save_figs = False
+save_figs = True
 
-#train_data_dir = 'kle{}_lhs{}.hdf5'.format(kle, ntrain)#'gauss_location_only_big_condensed_lhs{}_gaussian.hdf5'.format(ntrain)####args.data_dir + '/kle{}_lhs{}.hdf5'.format(args.kle, args.ntrain)
-#test_data_dir = 'kle{}_mc{}.hdf5'.format(kle, ntest)#'gauss_location_only_big_condensed_mc{}_gaussian.hdf5'.format(ntest)#####args.data_dir + 
-train_data_dir = 'kle{}_lhs{}_bimodal_2.hdf5'.format(kle, ntrain)#'gauss_location_only_big_condensed_lhs{}_gaussian.hdf5'.format(ntrain)####args.data_dir + '/kle{}_lhs{}.hdf5'.format(args.kle, args.ntrain)
-test_data_dir = 'kle{}_mc{}_bimodal_2.hdf5'.format(kle, ntest)#'gauss_location_only_big_condensed_mc{}_gaussian.hdf5'.format(ntest)#####args.data_dir + 
-#train_data_dir = 'kle{}_lhs{}_trans_gauss.hdf5'.format(kle, ntrain)#'gauss_location_only_big_condensed_lhs{}_gaussian.hdf5'.format(ntrain)####args.data_dir + '/kle{}_lhs{}.hdf5'.format(args.kle, args.ntrain)
-#test_data_dir = 'kle{}_mc{}_trans_gauss.hdf5'.format(kle, ntest)#'gauss_location_only_big_condensed_mc{}_gaussian.hdf5'.format(ntest)#####args.data_dir + 
-
+train_data_dir = 'data/DarcyFlow/multimodal/kle{}_lhs{}_bimodal_2.hdf5'.format(kle, ntrain)#
+test_data_dir = 'data/DarcyFlow/multimodal/kle{}_mc{}_bimodal_2.hdf5'.format(kle, ntest)#
 
 train_loader, train_stats = load_data_new(train_data_dir, ntrain)
 test_loader, test_stats = load_data_new(test_data_dir, ntest)
-#VAE, loss_reg, loss_rec, beta, config = load_DenseVAE('n2_kle2_VAEs/DenseVAE/DenseVAE_n2_kle2_best.pth'.format(n_latent, kle))#'gauss_location_only_big_condensed_VAEs/DenseVAE_n2_1.pth')#
-VAE, loss_reg, loss_rec, beta, config = load_DenseVAE_dist_arch('n{}_kle{}_VAEs/DenseVAE/DistArch/bimodal_gen_2/DenseVAE_dist_arch_{}/DenseVAE_dist_arch_{}.pth'.format(n_latent, kle, trial, trial))#'gauss_location_only_big_condensed_VAEs/DenseVAE_n2_1.pth')#
-#VAE, loss_reg, loss_rec, beta, config = load_DenseVAE('beta_study/RD_curve/trial_2/DenseVAE_n2_kle2_beta0.001.pth'.format(n_latent, kle))#'gauss_location_only_big_condensed_VAEs/DenseVAE_n2_1.pth')#
-#VAE, loss_reg, loss_rec, beta, config = load_DenseVAE('num_train_data_study/n2_kle2/DenseVAE_n2_kle2_ntrain128_0.pth'.format(n_latent, kle))#'gauss_location_only_big_condensed_VAEs/DenseVAE_n2_1.pth')#
+
+VAE, loss_reg, loss_rec, beta, config = load_DenseVAE_dist_arch(os.path.join(load_path, model_name))#'gauss_location_only_big_condensed_VAEs/DenseVAE_n2_1.pth')#
 
 print('Loss: ', loss_reg + loss_rec)
     
@@ -119,6 +113,8 @@ plt.xlabel('Epoch', fontsize = 22)
 plt.ylabel(r'$\beta$', fontsize = 22)
 plt.xticks(fontsize=18)
 plt.yticks(fontsize=18)
+if save_figs:
+    plt.savefig(os.path.join(load_path, 'beta_{}.png'.format(trial)))
 
 in_test = in_test.detach().numpy()
 out_test = out_test.detach().numpy()
@@ -142,7 +138,7 @@ plt.imshow(in_test-out_test, cmap = 'jet')
 plt.title('Error in Mean', fontsize = 16)
 plt.colorbar()
 if save_figs:
-    plt.savefig('dis_study/bimodal_2/recon_bimodal_2_{}.png'.format(trial))
+    plt.savefig(os.path.join(load_path, 'recon_{}.png'.format(trial)))
 
 plt.figure(10)
 plt.plot(beta*loss_reg + loss_rec, 'r', label = r'Training Loss', lw=3)
@@ -152,10 +148,12 @@ plt.ylabel(r'Loss', fontsize=22)
 plt.xlabel(r'Epochs', fontsize=22)
 plt.xticks(fontsize=18)
 plt.yticks(fontsize=18)
+if save_figs:
+    plt.savefig(os.path.join(load_path, 'training_losses_{}.png'.format(trial)))
 
 plt.figure(13)
 ind = config['epochs'] - 1250
-#plt.plot(loss_reg[ind:], loss_rec[ind:])
+
 # plot all latent data correlations with gen parameters
 plt.figure(6, figsize = (13, 13))
 count = 0
@@ -196,33 +194,8 @@ for i in range(n_latent):
     plt.xlabel(r'$z_{}$'.format(i+1), fontsize = 18)
     plt.plot( np.exp(lp), plotv, 'k--')
 if save_figs:
-    plt.savefig('dis_study/bimodal_2/dis_bimodal_2_{}.png'.format(trial))
-'''
-plt.subplot(3,3,2)
-plt.plot(g[:,0],zmu[:,1].detach().numpy(),'k.', markersize = 1)
-plt.plot(g_test[:,0],zmu_test[:,1].detach().numpy(),'r.', markersize = 1)
+    plt.savefig(os.path.join(load_path, 'disentanglement_{}.png'.format(trial)))
 
-#plt.gca().set_aspect('equal')
-
-plt.subplot(3,3,3)
-plt.plot(g[:,1],zmu[:,1].detach().numpy(),'k.', markersize = 1, label = 'Train Data')
-plt.plot(g_test[:,1],zmu_test[:,1].detach().numpy(),'r.', markersize = 1, label = 'Test Data')
-plt.legend(prop={"size":14}, markerscale = 5.)
-#plt.gca().set_aspect('equal')
-
-plt.subplot(3,3,5)
-plt.plot(g[:,0],zmu[:,0].detach().numpy(),'k.', markersize = 1)
-plt.plot(g_test[:,0],zmu_test[:,0].detach().numpy(),'r.', markersize = 1)
-
-
-#plt.gca().set_aspect('equal')
-
-plt.subplot(3,3,6)
-plt.plot(g[:,1],zmu[:,0].detach().numpy(),'k.', markersize = 1)
-plt.plot(g_test[:,1],zmu_test[:,0].detach().numpy(),'r.', markersize = 1)
-
-#plt.gca().set_aspect('equal') 
-'''
 ztest = zmu.detach().numpy()
 ztest = ztest[:,0:2]
 g = g[:,0:2]
@@ -249,7 +222,7 @@ plt.title('Aggregated Posterior - Prior Comparison (VAE)', fontsize = 16)
 proxy = [plt.Rectangle((0,0),1,1,fc = 'red'), plt.Rectangle((0,0),1,1,fc = 'blue'), plt.Rectangle((0,0),1,1,fc = 'black')]
 plt.legend(proxy, ['Aggregated Posterior', 'Generative Parameters', 'Prior'], prop={"size":16}, loc = 2)
 if save_figs:
-    plt.savefig('dis_study/bimodal_2/agg_post_bimodal_2_{}.png'.format(trial))
+    plt.savefig(os.path.join(load_path, 'agg_post_comparison_{}.png'.format(trial)))
 
 plt.figure(27)
 plt.plot(zmu[:,0].detach().numpy(), zmu[:,1].detach().numpy(), 'k.', markersize = 1, label = 'Train Data')
@@ -257,44 +230,9 @@ plt.plot(zmu_test[:,0].detach().numpy(), zmu_test[:,1].detach().numpy(), 'r.', m
 plt.xlabel(r'$z_1$')
 plt.ylabel(r'$z_2$')
 plt.title(r'Samples from $q_\phi(z)$')
+if save_figs:
+    plt.savefig(os.path.join(load_path, 'agg_post_samples_{}.png'.format(trial)))
 '''
-g1v = np.concatenate((g[:,0], g_test[:,0]), axis = 0)
-kde = KernelDensity(bandwidth = 0.5, kernel = 'gaussian')
-kde.fit(np.reshape(g1v, (-1,1)))
-plotv = np.linspace(np.min(g1v), np.max(g1v), 1000)
-lp = kde.score_samples(np.reshape(plotv, (-1, 1)))
-plt.figure(6)
-plt.subplot(3,3,8)
-plt.xlabel(r'$\theta_1$', fontsize = 18)
-plt.plot(plotv, np.exp(lp), 'k--')
-
-g1v = np.concatenate((g[:,1], g_test[:,1]), axis = 0)
-kde = KernelDensity(bandwidth = 0.5, kernel = 'gaussian')
-kde.fit(np.reshape(g1v, (-1,1)))
-plotv = np.linspace(np.min(g1v), np.max(g1v), 1000)
-lp = kde.score_samples(np.reshape(plotv, (-1, 1)))
-plt.subplot(3,3,9)
-plt.xlabel(r'$\theta_2$', fontsize = 18)
-plt.plot(plotv, np.exp(lp), 'k--')
-
-g1v = np.concatenate((z[:,0].detach().numpy(), z_test[:,0].detach().numpy()), axis = 0)
-kde = KernelDensity(bandwidth = 0.5, kernel = 'gaussian')
-kde.fit(np.reshape(g1v, (-1,1)))
-plotv = np.linspace(np.min(g1v), np.max(g1v), 1000)
-lp = kde.score_samples(np.reshape(plotv, (-1, 1)))
-plt.subplot(3,3,4)
-plt.ylabel(r'$z_1$', fontsize = 18)
-plt.plot(np.exp(lp), plotv, 'k--')
-
-g1v = np.concatenate((z[:,1].detach().numpy(), z_test[:,1].detach().numpy()), axis = 0)
-kde = KernelDensity(bandwidth = 0.5, kernel = 'gaussian')
-kde.fit(np.reshape(g1v, (-1,1)))
-plotv = np.linspace(np.min(g1v), np.max(g1v), 1000)
-lp = kde.score_samples(np.reshape(plotv, (-1, 1)))
-plt.subplot(3,3,1)
-plt.plot(np.exp(lp), plotv, 'k--')
-plt.ylabel(r'$z_2$', fontsize = 18)
-
 
 # plot test data correlations with generative parameters (include uncertainty)
 
@@ -322,11 +260,11 @@ plt.ylabel(r'$z_2$', fontsize = 18)
 plt.legend(prop={"size":14})
 #plt.gca().set_aspect('equal')
 
-'''
+
 z = zmu.detach().numpy()
 fig = plt.figure(21)
 ax = plt.axes(projection='3d')
 ax.scatter3D(z[:,0], z[:,1], z[:,2], c='k')
 
-
+'''
 

@@ -6,8 +6,6 @@ VAE training file: requires a configuration file "config_train.py" to train
 """
 
 from config_train import *
-from DenseVAE_train import *
-from DenseVAE_HP_train import *
 from DenseVAE_train_dist_arch import *
 import os
 import time
@@ -20,7 +18,7 @@ if __name__ == '__main__':
     start = time.time()
     
     if not os.path.exists(save_dir):
-        os.mkdir(save_dir) 
+        os.makedirs(save_dir) 
         
     
     file_exists = True
@@ -30,8 +28,8 @@ if __name__ == '__main__':
             while file_exists:
                 if trial_num > 100:
                     break
-                save_dir_temp = save_dir + '/DenseVAE_HP_' + str(trial_num)
-                filename = 'DenseVAE_HP_' + str(trial_num) + '.pth'
+                save_dir_temp = save_dir + '/VAE_HP_' + str(trial_num)
+                filename = 'VAE_HP_' + str(trial_num) + '.pth'
                 path_exists = os.path.exists(save_dir_temp)
                 if path_exists:
                     file_exists = os.path.exists(save_dir_temp + '/' + filename)
@@ -43,8 +41,8 @@ if __name__ == '__main__':
             while file_exists:
                 if trial_num > 100:
                     break
-                save_dir_temp = save_dir + '/DenseVAE_' + str(trial_num)
-                filename = 'DenseVAE_' + str(trial_num) + '.pth'
+                save_dir_temp = save_dir + '/VAE_' + str(trial_num)
+                filename = 'VAE_' + str(trial_num) + '.pth'
                 path_exists = os.path.exists(save_dir_temp)
                 if path_exists:
                     file_exists = os.path.exists(save_dir_temp + '/' + filename)
@@ -56,8 +54,8 @@ if __name__ == '__main__':
         while file_exists:
             if trial_num > 100:
                 break
-            save_dir_temp = save_dir + '/DenseVAE_dist_arch_' + str(trial_num)
-            filename = 'DenseVAE_dist_arch_' + str(trial_num) + '.pth'
+            save_dir_temp = save_dir + '/VAE_' + str(trial_num)
+            filename = 'VAE_' + str(trial_num) + '.pth'
             path_exists = os.path.exists(save_dir_temp)
             if path_exists:
                 file_exists = os.path.exists(save_dir_temp + '/' + filename)

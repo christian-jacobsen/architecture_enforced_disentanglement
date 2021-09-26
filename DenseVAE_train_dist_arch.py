@@ -19,13 +19,12 @@ def DenseVAE_train_dist_arch(train_data_dir, test_data_dir, save_dir, filename, 
 
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    
+    print(device) 
     # these parameters are due to the training data format of example problem ...
        
     train_loader, train_stats = load_data_new(train_data_dir, batch_size)
         
     VAE = DenseVAE_distributed_arch(data_channels, initial_features, growth_rate, n_latent, prior)
-    print(VAE)
     VAE = VAE.to(device)
     optimizer = torch.optim.Adam(VAE.parameters(), lr=lr_schedule(0), weight_decay = wd)
     beta = beta0
@@ -36,7 +35,9 @@ def DenseVAE_train_dist_arch(train_data_dir, test_data_dir, save_dir, filename, 
     VAE.train()
     
     for epoch in range(epochs):
-        
+        if epoch % 10 == 0:
+            print('=======================================')
+            print('Epoch: ', epoch) 
         optimizer.param_groups[0]['lr'] = lr_schedule(epoch) #update learning rate
         
         for n, (_, _, out_data) in enumerate(train_loader):
@@ -77,8 +78,6 @@ def DenseVAE_train_dist_arch(train_data_dir, test_data_dir, save_dir, filename, 
             l_reg_list[epoch] = l_reg
             beta_list[epoch] = beta
         if epoch % 10 == 0:
-            print('=======================================')
-            print('Epoch = ', epoch)
             print('beta = ', beta)
             print('l_rec = ', l_rec)
             print('l_reg = ', l_reg)   
