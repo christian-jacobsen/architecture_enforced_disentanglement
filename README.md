@@ -9,4 +9,4 @@ Investigate three architectures to enforce disentanglement on Darcy flow problem
 `problem/generative_parameter_dimension/generative_parameter_distribution/general_network_architecture/latent_dim/VAE_<trial_num>`
 
 # Architecture 1 (arch1)
-![plot](./architecture_enforced_disentanglement/architecture_diagrams/arch1.png)
+![plot](./architecture_diagrams/arch1.png)
