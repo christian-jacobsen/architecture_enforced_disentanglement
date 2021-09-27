@@ -333,8 +333,8 @@ class VAE_arch1(nn.Module):
         m2_in = torch.cat((torch.unsqueeze(int_out[:,1,:,:],1), torch.unsqueeze(int_out[:,4,:,:],1)),1)
         m3_in = torch.cat((torch.unsqueeze(int_out[:,2,:,:],1), torch.unsqueeze(int_out[:,5,:,:],1)),1)
         xmu = torch.cat((self.m1_out(m1_in), self.m2_out(m2_in), self.m3_out(m3_in)), 1)
-        xlogvar = self.lv_out(z)#torch.cat((self.dec1(torch.unsqueeze(z[:,0],-1)), self.dec2(torch.unsqueeze(z[:,1],-1))), 1))
-        #xlogvar = self.dec_logvar
+        #xlogvar = self.lv_out(z)#torch.cat((self.dec1(torch.unsqueeze(z[:,0],-1)), self.dec2(torch.unsqueeze(z[:,1],-1))), 1))
+        xlogvar = self.dec_logvar
         return xmu, xlogvar
 
     def forward(self, x):
