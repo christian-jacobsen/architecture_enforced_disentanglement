@@ -203,43 +203,15 @@ class VAE_arch3(nn.Module):
         self.cast_lv2.add_module('Act1', self.act)
         self.cast_lv2.add_module('FullConn2', nn.Linear(flatten_dim2 // 2, 2))
         
-        flatten_dim1 = n_features1*16*16
-        self.cast_m1.add_module('Flatten', nn.Flatten())
-        self.cast_m1.add_module('FullConn1', nn.Linear(flatten_dim1, flatten_dim1 // 2))
-        self.cast_m1.add_module('Act1', self.act)
-        self.cast_m1.add_module('FullConn2', nn.Linear(flatten_dim1 // 2, 1))
-        
-        self.cast_lv1.add_module('Flatten', nn.Flatten())
-        self.cast_lv1.add_module('FullConn1', nn.Linear(flatten_dim1, flatten_dim1 // 2))
-        self.cast_lv1.add_module('Act1', self.act)
-        self.cast_lv1.add_module('FullConn2', nn.Linear(flatten_dim1 // 2, 1))
-        
-
-        self.dec1.add_module('FullConn1', nn.Linear(1, flatten_dim1 // 2))
+        # learn convolutional kernels as a function of latent factor
+        self.batch_size = 512
+        self.kern_width = 11
+        kern_out = self.kern_width**2 * self.data_channels**2
+        self.dec1.add_module('FullConn1', nn.Linear(1, kern_out // 2))
         self.dec1.add_module('Act1', nn.ReLU())
-        self.dec1.add_module('FullConn2', nn.Linear(flatten_dim1 // 2, flatten_dim1))
-        self.dec1.add_module('Reshape1', Reshape((-1, n_features1, 16, 16)))
+        self.dec1.add_module('FullConn2', nn.Linear(kern_out // 2, kern_out))
+        self.dec1.add_module('Reshape1', Reshape((self.data_channels*self.batch_size, self.data_channels, self.kern_width, self.kern_width)))
         
-        n_features = n_features1
-        for i, n_layers in enumerate([n_l]):
-            block = _DenseBlock(n_layers = n_layers, in_features = n_features, growth_rate = self.K)
-            
-            self.dec1.add_module('DecoderDenseBlock%d' % (i+1), block)
-            n_features += n_layers*self.K
-            
-            dec = _Transition(in_features = n_features, out_features = n_features // 2,
-                              down = False)
-            self.dec1.add_module('DecodeUp%d' % (i+1), dec)
-            n_features = n_features // 2
-            
-        final_decode = last_decoding(n_features, data_channels, kernel_size = 4, stride = 2, padding = 1, 
-                         output_padding = 1, bias = False, drop_rate = 0)
-                
-        self.dec1.add_module('FinalDecode', final_decode)
-        #self.dec1.add_module('FinalConv', nn.Conv2d(data_channels, data_channels, 
-        #                                                         kernel_size = 5, stride = 1, padding = 2, bias = False))
-        
-            
         self.dec2.add_module('FullConn1', nn.Linear(1, flatten_dim2 // 2))
         self.dec2.add_module('Act1', nn.ReLU())
         self.dec2.add_module('FullConn2', nn.Linear(flatten_dim2 // 2, flatten_dim2))
@@ -262,38 +234,11 @@ class VAE_arch3(nn.Module):
                                      output_padding = 1, bias = False, drop_rate = 0)
                 
         self.dec2.add_module('FinalDecode', final_decode)
-        #self.dec2.add_module('FinalConv', nn.Conv2d(data_channels, data_channels, 
-        #                                                         kernel_size = 5, stride = 1, padding = 2, bias = False))
         
         
-        self.m_out.add_module('Conv1', nn.Conv2d(self.n_latent*self.data_channels, self.data_channels,
-                                                 kernel_size = 1, stride = 1, padding = 0, bias = False))
+        self.m_out.add_module('Conv1', nn.Conv2d(self.data_channels, self.data_channels,
+                                                 kernel_size = 5, stride = 1, padding = 2, bias = False))
         
-        self.m1_out = nn.Sequential()
-        self.m2_out = nn.Sequential()
-        self.m3_out = nn.Sequential()
-        
-        self.m1_out.add_module('Conv1', nn.Conv2d(self.n_latent, 1,
-                                                 kernel_size = 7, stride = 1, padding = 3, bias = False))
-        self.m2_out.add_module('Conv1', nn.Conv2d(self.n_latent, 1,
-                                                 kernel_size = 7, stride = 1, padding = 3, bias = False))
-        self.m3_out.add_module('Conv1', nn.Conv2d(self.n_latent, 1,
-                                                 kernel_size = 7, stride = 1, padding = 3, bias = False))
-        
-        
-        #        'FinalDecode', last_decoding(data_channels*n_latent, data_channels, kernel_size = 5, stride = 1, padding = 2, 
-        #                             output_padding = 0, bias = False, drop_rate = 0))
-                             
-        #self.m_out.add_module('Conv2', nn.Conv2d(self.data_channels, self.data_channels,
-        #                                         kernel_size = 3, stride = 1, padding = 1, bias = False))
-        
-        
-        
-        #self.lv_out.add_module('Conv1', nn.Conv2d(self.n_latent*self.data_channels, self.data_channels,
-        #                                         kernel_size = 7, stride = 1, padding = 3, bias = False))
-        
-        #self.lv_out.add_module('Conv2', nn.Conv2d(self.data_channels, self.data_channels,
-        #                                         kernel_size = 3, stride = 1, padding = 1, bias = False))
         
         self.lv_out.add_module('FullConn1', nn.Linear(2, flatten_dim2 // 2))
         self.lv_out.add_module('Act1', nn.ReLU())
@@ -329,14 +274,10 @@ class VAE_arch3(nn.Module):
         return zmu, zlogvar
     
     def decoder(self, z):
-        xmu = self.m_out(torch.cat((self.dec1(torch.unsqueeze(z[:,0],-1)), self.dec2(torch.unsqueeze(z[:,1],-1))), 1))
-        '''
-        int_out = torch.cat((self.dec1(torch.unsqueeze(z[:,0],-1)), self.dec2(torch.unsqueeze(z[:,1],-1))), 1)
-        m1_in = torch.cat((torch.unsqueeze(int_out[:,0,:,:],1), torch.unsqueeze(int_out[:,3,:,:],1)),1)
-        m2_in = torch.cat((torch.unsqueeze(int_out[:,1,:,:],1), torch.unsqueeze(int_out[:,4,:,:],1)),1)
-        m3_in = torch.cat((torch.unsqueeze(int_out[:,2,:,:],1), torch.unsqueeze(int_out[:,5,:,:],1)),1)
-        xmu = torch.cat((self.m1_out(m1_in), self.m2_out(m2_in), self.m3_out(m3_in)), 1)
-        '''
+        kerns = self.dec1(torch.unsqueeze(z[:,0],-1))
+        inter = self.dec2(torch.unsqueeze(z[:,1],-1))
+        xmu = self.m_out(F.conv2d(inter.view(1, self.batch_size*self.data_channels, inter.size(2), inter.size(3)), kerns, padding = 11//2, groups = self.batch_size).view(self.batch_size, self.data_channels, inter.size(2), inter.size(3)))
+        #xmu = self.m_out(torch.cat((self.dec1(torch.unsqueeze(z[:,0],-1)), self.dec2(torch.unsqueeze(z[:,1],-1))), 1))
         #xlogvar = self.lv_out(z)#torch.cat((self.dec1(torch.unsqueeze(z[:,0],-1)), self.dec2(torch.unsqueeze(z[:,1],-1))), 1))
         xlogvar = self.dec_logvar
         return xmu, xlogvar
