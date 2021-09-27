@@ -5,7 +5,7 @@ Created on Wed Apr  7 11:27:37 2021
 @author: chris
 """
 
-from DenseVAE_distributed_arch import *
+from VAE_arch1 import *
 from load_data_new import load_data_new
 import os
 import torch
@@ -17,13 +17,13 @@ from mpl_toolkits import mplot3d
 
 plt.close('all')
 
-def load_DenseVAE_dist_arch(path):
+def load_VAE_arch1(path):
     config = torch.load(path)
     data_channels = 3
     initial_features = config['initial_features']
     growth_rate = config['growth_rate']
     n_latent = config['n_latent']
-    VAE = DenseVAE_distributed_arch(data_channels, initial_features, growth_rate, n_latent)
+    VAE = VAE_arch1(data_channels, initial_features, growth_rate, n_latent)
     VAE.load_state_dict(config['model_state_dict'])
     loss_reg = config['l_reg']
     loss_rec = config['l_rec']
@@ -36,7 +36,7 @@ kle = 2
 ntrain = 512
 ntest = 512
 
-trial = 0
+trial = 1
 load_path = './DarcyFlow/p2/multimodal/arch1/n2/VAE_{}'.format(trial)
 model_name = 'VAE_{}.pth'.format(trial)
 
@@ -48,7 +48,7 @@ test_data_dir = 'data/DarcyFlow/multimodal/kle{}_mc{}_bimodal_2.hdf5'.format(kle
 train_loader, train_stats = load_data_new(train_data_dir, ntrain)
 test_loader, test_stats = load_data_new(test_data_dir, ntest)
 
-VAE, loss_reg, loss_rec, beta, config = load_DenseVAE_dist_arch(os.path.join(load_path, model_name))#'gauss_location_only_big_condensed_VAEs/DenseVAE_n2_1.pth')#
+VAE, loss_reg, loss_rec, beta, config = load_VAE_arch1(os.path.join(load_path, model_name))#'gauss_location_only_big_condensed_VAEs/DenseVAE_n2_1.pth')#
 
 print('Loss: ', loss_reg + loss_rec)
     
