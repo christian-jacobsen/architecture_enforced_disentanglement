@@ -7,6 +7,7 @@ VAE training file: requires a configuration file "config_train.py" to train
 
 from config_train import *
 from VAE_arch1_train import *
+from VAE_arch3_train import *
 import os
 import time
 import numpy as np
@@ -23,7 +24,7 @@ if __name__ == '__main__':
     
     file_exists = True
     trial_num = 0
-    if not DA:
+    if False:
         if HP:
             while file_exists:
                 if trial_num > 100:
@@ -66,7 +67,7 @@ if __name__ == '__main__':
     
     save_dir = save_dir_temp
     
-    if not DA:
+    if False:
         if HP:
             DenseVAE_HP_train(train_data_dir, test_data_dir, save_dir, filename, \
                               epochs, rec_epochs, batch_size, test_batch_size, wd, beta0, lr_schedule, nu, tau, \
@@ -79,7 +80,15 @@ if __name__ == '__main__':
                            data_channels, initial_features, dense_blocks, growth_rate, n_latent, \
                            prior)
     else:
-        VAE_arch1_train(train_data_dir, test_data_dir, save_dir, filename, \
+        if arch_num == 1:
+            VAE_arch1_train(train_data_dir, test_data_dir, save_dir, filename, \
+                                 epochs, rec_epochs, batch_size, test_batch_size, wd, beta0, lr_schedule, nu, tau, \
+                                 data_channels, initial_features, growth_rate, n_latent, \
+                                 prior)
+        elif arch_num == 2:
+            print('arch 2 does not exist yet')
+        elif arch_num == 3:
+            VAE_arch3_train(train_data_dir, test_data_dir, save_dir, filename, \
                                  epochs, rec_epochs, batch_size, test_batch_size, wd, beta0, lr_schedule, nu, tau, \
                                  data_channels, initial_features, growth_rate, n_latent, \
                                  prior)

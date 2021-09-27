@@ -135,13 +135,13 @@ def last_decoding(in_features, out_channels, kernel_size, stride, padding,
     return last_up
 
 
-class DenseVAE_distributed_arch(nn.Module):
+class VAE_arch3(nn.Module):
     def __init__(self, data_channels, initial_features, growth_rate, n_latent, prior = 'std_norm', activations = nn.ReLU()):
         """
         A VAE using convolutional dense blocks and convolutional encoding layers
         """
         
-        super(DenseVAE_distributed_arch, self).__init__()
+        super(VAE_arch3, self).__init__()
         
         self.data_channels = data_channels
         self.K = growth_rate
@@ -196,12 +196,12 @@ class DenseVAE_distributed_arch(nn.Module):
         self.cast_m2.add_module('Flatten', nn.Flatten())
         self.cast_m2.add_module('FullConn1', nn.Linear(flatten_dim2, flatten_dim2 // 2))
         self.cast_m2.add_module('Act1', self.act)
-        self.cast_m2.add_module('FullConn2', nn.Linear(flatten_dim2 // 2, 1))
+        self.cast_m2.add_module('FullConn2', nn.Linear(flatten_dim2 // 2, 2))
         
         self.cast_lv2.add_module('Flatten', nn.Flatten())
         self.cast_lv2.add_module('FullConn1', nn.Linear(flatten_dim2, flatten_dim2 // 2))
         self.cast_lv2.add_module('Act1', self.act)
-        self.cast_lv2.add_module('FullConn2', nn.Linear(flatten_dim2 // 2, 1))
+        self.cast_lv2.add_module('FullConn2', nn.Linear(flatten_dim2 // 2, 2))
         
         flatten_dim1 = n_features1*16*16
         self.cast_m1.add_module('Flatten', nn.Flatten())
@@ -322,19 +322,23 @@ class DenseVAE_distributed_arch(nn.Module):
         
 
     def encoder(self, x):
-        zmu = torch.cat((self.cast_m1(self.enc1(x)), self.cast_m2(self.enc2(self.enc1(x)))), 1)
-        zlogvar = torch.cat((self.cast_lv1(self.enc1(x)), self.cast_lv2(self.enc2(self.enc1(x)))), 1)
+        zmu = self.cast_m2(self.enc2(self.enc1(x)))
+        #zmu = torch.cat((self.cast_m1(self.enc1(x)), self.cast_m2(self.enc2(self.enc1(x)))), 1)
+        zlogvar = self.cast_lv2(self.enc2(self.enc1(x)))
+        #zlogvar = torch.cat((self.cast_lv1(self.enc1(x)), self.cast_lv2(self.enc2(self.enc1(x)))), 1)
         return zmu, zlogvar
     
     def decoder(self, z):
-        #xmu = self.m_out(torch.cat((self.dec1(torch.unsqueeze(z[:,0],-1)), self.dec2(torch.unsqueeze(z[:,1],-1))), 1))
+        xmu = self.m_out(torch.cat((self.dec1(torch.unsqueeze(z[:,0],-1)), self.dec2(torch.unsqueeze(z[:,1],-1))), 1))
+        '''
         int_out = torch.cat((self.dec1(torch.unsqueeze(z[:,0],-1)), self.dec2(torch.unsqueeze(z[:,1],-1))), 1)
         m1_in = torch.cat((torch.unsqueeze(int_out[:,0,:,:],1), torch.unsqueeze(int_out[:,3,:,:],1)),1)
         m2_in = torch.cat((torch.unsqueeze(int_out[:,1,:,:],1), torch.unsqueeze(int_out[:,4,:,:],1)),1)
         m3_in = torch.cat((torch.unsqueeze(int_out[:,2,:,:],1), torch.unsqueeze(int_out[:,5,:,:],1)),1)
         xmu = torch.cat((self.m1_out(m1_in), self.m2_out(m2_in), self.m3_out(m3_in)), 1)
-        xlogvar = self.lv_out(z)#torch.cat((self.dec1(torch.unsqueeze(z[:,0],-1)), self.dec2(torch.unsqueeze(z[:,1],-1))), 1))
-        #xlogvar = self.dec_logvar
+        '''
+        #xlogvar = self.lv_out(z)#torch.cat((self.dec1(torch.unsqueeze(z[:,0],-1)), self.dec2(torch.unsqueeze(z[:,1],-1))), 1))
+        xlogvar = self.dec_logvar
         return xmu, xlogvar
 
     def forward(self, x):

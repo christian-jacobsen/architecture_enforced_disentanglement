@@ -32,11 +32,12 @@ def lr_schedule_1(epoch):
 
 # dataset and save paths ----------------------------------------------------------------------------------------------
 n_latent = 2                # latent dimension
+arch_num = 3               # architecture number
         
 train_data_dir = 'data/DarcyFlow/multimodal/kle2_lhs512_bimodal_2.hdf5'   # training data directory
 test_data_dir = 'data/DarcyFlow/multimodal/kle2_mc512_bimodal_2.hdf5'     # testing data directory
 
-save_dir = './DarcyFlow/p2/multimodal/arch1/n{}'.format(n_latent) # specify a folder where all similar models belong. 
+save_dir = './DarcyFlow/p2/multimodal/arch{}/n{}'.format(arch_num, n_latent) # specify a folder where all similar models belong. 
                                      #    after training, model and configuration will be saved in a subdirectory as a .pth file
 continue_training = False           # specify if training is continued from a saved model
 continue_path = './n2_kle2_VAEs/DenseVAE/HierarchicalPrior/bimodal_gen_2/DenseVAE_n2_kle2_hp_32.pth'                # the path to the previously saved model                
@@ -44,7 +45,6 @@ save_interval = None
 # architecture parameters ---------------------------------------------------------------------------------------------
 
 HP = False                 # include heirarchical prior network?
-DA = True                   # use the distributed architecture?
 
 dense_blocks = [4, 6, 4]    # vector containing dense blocks and their length
 growth_rate = 4             # see dense architecture for detailed explantation. dense block growth rate
