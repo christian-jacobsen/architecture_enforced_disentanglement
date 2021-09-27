@@ -6,7 +6,7 @@ VAE training file: requires a configuration file "config_train.py" to train
 """
 
 from config_train import *
-from DenseVAE_train_dist_arch import *
+from VAE_arch1_train import *
 import os
 import time
 import numpy as np
@@ -79,7 +79,7 @@ if __name__ == '__main__':
                            data_channels, initial_features, dense_blocks, growth_rate, n_latent, \
                            prior)
     else:
-        DenseVAE_train_dist_arch(train_data_dir, test_data_dir, save_dir, filename, \
+        VAE_arch1_train(train_data_dir, test_data_dir, save_dir, filename, \
                                  epochs, rec_epochs, batch_size, test_batch_size, wd, beta0, lr_schedule, nu, tau, \
                                  data_channels, initial_features, growth_rate, n_latent, \
                                  prior)

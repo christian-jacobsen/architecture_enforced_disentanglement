@@ -5,14 +5,14 @@ Created on Fri Mar 26 17:41:10 2021
 @author: Christian Jacobsen, University of Michigan
 """
 
-from DenseVAE_distributed_arch import *
+from VAE_arch1 import *
 from load_data_new import load_data_new
 import torch
 import numpy as np
 
 
 
-def DenseVAE_train_dist_arch(train_data_dir, test_data_dir, save_dir, filename, \
+def VAE_arch1_train(train_data_dir, test_data_dir, save_dir, filename, \
                        epochs, rec_epochs, batch_size, test_batch_size, wd, beta0, lr_schedule, nu, tau, \
                        data_channels, initial_features, growth_rate, n_latent, \
                        prior):
@@ -24,7 +24,7 @@ def DenseVAE_train_dist_arch(train_data_dir, test_data_dir, save_dir, filename, 
        
     train_loader, train_stats = load_data_new(train_data_dir, batch_size)
         
-    VAE = DenseVAE_distributed_arch(data_channels, initial_features, growth_rate, n_latent, prior)
+    VAE = VAE_arch1(data_channels, initial_features, growth_rate, n_latent, prior)
     VAE = VAE.to(device)
     optimizer = torch.optim.Adam(VAE.parameters(), lr=lr_schedule(0), weight_decay = wd)
     beta = beta0
