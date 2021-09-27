@@ -32,7 +32,7 @@ def lr_schedule_1(epoch):
 
 # dataset and save paths ----------------------------------------------------------------------------------------------
 n_latent = 2                # latent dimension
-arch_num = 1               # architecture number
+arch_num = 3               # architecture number
         
 train_data_dir = 'data/DarcyFlow/multimodal/kle2_lhs512_bimodal_2.hdf5'   # training data directory
 test_data_dir = 'data/DarcyFlow/multimodal/kle2_mc512_bimodal_2.hdf5'     # testing data directory
