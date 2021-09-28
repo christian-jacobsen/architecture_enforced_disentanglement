@@ -37,7 +37,7 @@ ntrain = 512
 ntest = 512
 
 arch_num = 3
-trial = 3
+trial = 4
 load_path = './DarcyFlow/p2/multimodal/arch{}/n2/VAE_{}'.format(arch_num,trial)
 model_name = 'VAE_{}.pth'.format(trial)
 
